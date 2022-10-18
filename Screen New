@@ -1,0 +1,305 @@
+
+import pygame                           # Allows for a window to show up
+from pygame.locals import *             # Allows me to resize the pygame window and the contents inside the window
+from requests_html import HTMLSession   # Allows to scrape data off internet
+pygame.init()                           # Initialises the window
+import pygame_gui
+
+# DATABASE
+import sqlite3
+conn = sqlite3.connect('test.db')
+
+def dict_factory(cursor, row):
+  d = {}
+  for idx, col in enumerate(cursor.description):
+    d[col[0]] = row[idx]
+  return d
+conn.row_factory = dict_factory
+
+conn.execute('''
+             CREATE TABLE if not exists Users
+             (ID INTEGER PRIMARY KEY
+             AUTOINCREMENT NOT NULL,
+             Username TEXT,
+             Password TEXT
+             );
+             ''')
+conn.commit()
+
+
+import time
+import sys
+import cv2
+
+
+WIDTH = 800
+HEIGHT = 500
+screen = pygame.display.set_mode((WIDTH, HEIGHT), HWSURFACE|DOUBLEBUF|RESIZABLE)   # Creates the pygame window and allows it to be resizable
+
+# #WEATHER FOR CITIES
+# citiestimecountry = []                                                                                                 # Creates a new arra
+# f = open("D:\OneDrive\Documents\SCHOOL\Computing Coursework\Screen\pyvidplayer-main\city.txt","r", encoding="utf8")
+# lines = f.readlines()
+# for line in lines:
+#     lines = line.strip("\n")
+#     citiestimecountry.append(lines)
+# f.close()
+# #WEATHER FOR CITIES
+
+manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+username = pygame_gui.elements.UITextEntryLine(relative_rect=pygame.Rect((150, 275), (200, 30)), manager=manager,
+                                               object_id='#username')
+password = pygame_gui.elements.UITextEntryLine(relative_rect=pygame.Rect((150, 320), (200, 30)), manager=manager,
+                                               object_id='#password')
+
+# HTML
+query = 'london'                                                                                                                                               # Defines 'query'
+s = HTMLSession()                                                                                                                                             # Defines 'htmlsession' as 's'
+url = f'https://www.google.com/search?q=weather+{query}'                                                                                                      # URL that data gets scraped from
+r = s.get(url,headers={'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36'})   # My user agent
+weathernumb = r.html.find('span#wob_tm', first = True).text                                                # Finds and scrapes data with class 'spanj#wob_dc' --> Degrees
+weathercondition = r.html.find('span#wob_dc', first = True).text                                           # Finds and scrapes data with class 'spanj#wob_dc' --> Weather condition
+# HTML
+
+
+class Button():                                                                       # Defining the class Button
+    def __init__(self, image, xpos, ypos, text_input):                                # Initialising
+        self.image = image                                                            # Assigns 'image' to the 'image' in the parameter of the function
+        self.xpos = xpos
+        self.ypos = ypos
+        self.rect = self.image.get_rect(center=(self.xpos, self.ypos))                # Creates a rectangle around the image to use as a check later on
+        self.text_input = text_input
+        self.text = buttonfont.render(self.text_input, True, "white")
+        self.text_rect = self.text.get_rect(center=(self.xpos, self.ypos))            # Creates a rectangle for the text
+    
+    def update(self):
+        # screen.blit(self.image, self.rect)                                          # Places the image on the screen (no need for image right now)
+        screen.blit(self.text, self.text_rect)                                        # Places the text on the screen
+        
+    def checkForInput(self, position):
+        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top, self.rect.bottom):     # If position[0] (x coordinate) is in between
+                                                                                                                                # the left and right most point of the rectangle,
+                                                                                                                                # and position[1] (y coordinate) is in between the
+                                                                                                                                # bottom and top most point of the rectangle
+            return True
+        return False
+
+    def changeColour(self, position):
+        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top, self.rect.bottom):
+            self.text = buttonfont.render(self.text_input, True, "green")                                                       # If above is true,change colour of text to green
+        else:
+            self.text = buttonfont.render(self.text_input, True, "white")
+
+class BigButton():                                                                       # Defining the class Button
+    def __init__(self, image, xpos, ypos, text_input):                                # Initialising
+        self.image = image                                                            # Assigns 'image' to the 'image' in the parameter of the function
+        self.xpos = xpos
+        self.ypos = ypos
+        self.rect = self.image.get_rect(center=(self.xpos, self.ypos))                # Creates a rectangle around the image to use as a check later on
+        self.text_input = text_input
+        self.text = bigbuttonfont.render(self.text_input, True, "white")
+        self.text_rect = self.text.get_rect(center=(self.xpos, self.ypos))            # Creates a rectangle for the text
+    
+    def update(self):
+        # screen.blit(self.image, self.rect)                                          # Places the image on the screen (no need for image right now)
+        screen.blit(self.text, self.text_rect)                                        # Places the text on the screen
+        
+    def checkForInput(self, position):
+        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top, self.rect.bottom):     # If position[0] (x coordinate) is in between
+                                                                                                                                # the left and right most point of the rectangle,
+                                                                                                                                # and position[1] (y coordinate) is in between the
+                                                                                                                                # bottom and top most point of the rectangle
+            return True
+        return False
+
+    def changeColour(self, position):
+        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top, self.rect.bottom):
+            self.text = bigbuttonfont.render(self.text_input, True, "green")                                                       # If above is true,change colour of text to green
+        else:
+            self.text = bigbuttonfont.render(self.text_input, True, "white")
+
+
+## DEFINITIONS
+CLOCK = pygame.time.Clock()
+# TEXT
+white = ((255,255,255))                                                                                                # Defining the colour white with RGB
+font1 = pygame.font.SysFont("Contrail One", 80)                                                                        # Defining font and size for heading
+font = pygame.font.SysFont("Contrail One", 50)                                                                         # Defining font and size for sub heading
+buttonfont = pygame.font.SysFont("Contrail One", 20)
+bigbuttonfont = pygame.font.SysFont("Contrail One", 60)
+welcome = font1.render("Welcome", True, white)                                                                         # Defining what text says, crisp edges, and the colour
+london = font.render("London", True, white)
+degree = font.render(weathernumb, True, white)                                                                         # Gets the degree number off web scraping
+# TEXT
+# IMAGES
+background = pygame.image.load("D:\OneDrive\Documents\SCHOOL\Computing Coursework\Screen\pyvidplayer-main\space.jpg")  # Imports the background
+background = pygame.transform.scale(background, (WIDTH,HEIGHT))                                                        # Changes background to fit screen size
+outline = pygame.image.load("D:\OneDrive\Documents\SCHOOL\Computing Coursework\Screen\pyvidplayer-main\Outline5.png")  # Imports the outline
+outline = pygame.transform.scale(outline, (WIDTH, HEIGHT))                                                             # Changes outline to fit the screen
+partlycloudy = pygame.image.load("D:\OneDrive\Documents\SCHOOL\Computing Coursework\Screen\pyvidplayer-main\partly_cloudy (1).png")
+
+# IMAGES
+# BUTTONS
+LOGINBUTTON = pygame.image.load("D:\OneDrive\Documents\SCHOOL\Computing Coursework\Screen\pyvidplayer-main\Button2.png")     # Imports the button image
+LOGINBUTTON = pygame.transform.scale(LOGINBUTTON, (80,30))                                                                   # Transforms size of button AND DISTANCE TO TURN GREEN
+LOGINBUTTON = Button(LOGINBUTTON, 600,370, "Log in")                                                                         # Using the class 'Button', i create an instance of
+                                                                                                                             # the class at position (600,370), and text "Log in"
+SIGNUPBUTTON = pygame.image.load("D:\OneDrive\Documents\SCHOOL\Computing Coursework\Screen\pyvidplayer-main\Button2.png")
+SIGNUPBUTTON = pygame.transform.scale(SIGNUPBUTTON, (80,30))
+SIGNUPBUTTON = Button(SIGNUPBUTTON, 700,370, "Sign up")
+
+
+SUBMITBUTTON = pygame.image.load("D:\OneDrive\Documents\SCHOOL\Computing Coursework\Screen\pyvidplayer-main\Button2.png")     # Imports the button image
+SUBMITBUTTON = pygame.transform.scale(SUBMITBUTTON, (150,40))
+SUBMITBUTTON = BigButton(SUBMITBUTTON, 250,400, "Submit") 
+# BUTTONS
+
+# LOCATIONS
+weatheryvalue = 100
+weatherxvalue = 100
+
+## DEFINITIONS
+
+
+def mainblit():                            # Function to put images/text on the screen
+    screen.blit(background,(0,0))          # Blits the background at given coordinates
+    screen.blit(outline,(0,0))             # Blits the outline at given coordinates
+    screen.blit(welcome,(500,300))         # Blits welcome text at given coordinates
+    screen.blit(london,(560,460))          # Blits london text at given coordinates
+    
+
+
+
+# MAIN MENU LOOP
+def main():
+    pygame.display.set_caption("Menu")                # Sets caption of the pygame window
+    main = True
+    while main:                                    # While loop for main menu
+        
+        MENU_MOUSE_POS = pygame.mouse.get_pos() 
+        mainblit()                                    # Calls the function to blit onto screen
+        screen.blit(degree, (weatherxvalue,weatheryvalue))                # Blits the degree onto screen (Here and not in function as needs to update with every while loop as degree can change)
+        screen.blit(partlycloudy, (weatherxvalue + 50, weatheryvalue - 20))
+        
+        for event in pygame.event.get():              # Checks all possible events that can occur in pygame
+            if event.type == pygame.QUIT:
+                main = False                       # Ends while loop if user presses 'X' in top right
+            
+            if event.type == pygame.MOUSEBUTTONDOWN:               # If user presses the mouse button
+                if LOGINBUTTON.checkForInput(MENU_MOUSE_POS):      # If the login button is pressed then go to function login()
+                    login()
+                    main = False
+                    
+                if SIGNUPBUTTON.checkForInput(MENU_MOUSE_POS):     # If signup button pressed go to function signup()
+                    signup()
+                    main = False
+
+                
+        LOGINBUTTON.update()                                      # Updates the button
+        LOGINBUTTON.changeColour(pygame.mouse.get_pos())          # Changes the colour whilst hovering over the button
+        SIGNUPBUTTON.update()
+        SIGNUPBUTTON.changeColour(pygame.mouse.get_pos())
+
+
+        pygame.display.update()                       # At the end of each loop the window gets updated with the code
+# MAIN MENU LOOP
+
+# SIGN UP
+entered = False
+user = False
+userpass = False
+
+def signup():
+    pygame.display.set_caption("Signup")
+    main = True
+    while main:
+
+            
+        REFRESHRATE = CLOCK.tick(60)/1000
+        MENU_MOUSE_POS = pygame.mouse.get_pos() 
+        mainblit()                                                        # Calls the function to blit onto screen
+        screen.blit(degree, (weatherxvalue,weatheryvalue))                # Blits the degree onto screen (Here and not in function as needs to update with every while loop as degree can change)
+        screen.blit(partlycloudy, (weatherxvalue + 50, weatheryvalue - 20))
+        
+        for event in pygame.event.get():                                  # Checks all possible events that can occur in pygame
+            if event.type == pygame.QUIT:
+                main = False                                              # Ends while loop if user presses 'X' in top right
+            
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if LOGINBUTTON.checkForInput(MENU_MOUSE_POS):
+                    login()
+                    main = False
+                    
+            if event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED and event.ui_object_id == "#username":
+                user_username = event.text
+                user = True
+                
+            if event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED and event.ui_object_id == "#password":
+                user_password = event.text
+                userpass = True
+            
+            if SUBMITBUTTON.checkForInput(MENU_MOUSE_POS) and user == True and userpass == True:
+                conn.execute("INSERT INTO Users (Username, Password) VALUES (?,?)", [user_username,user_password])
+            
+            manager.process_events(event)    
+        
+        
+                
+        
+
+        LOGINBUTTON.update()                                             # Shows only login button now
+        LOGINBUTTON.changeColour(pygame.mouse.get_pos())
+        
+        SUBMITBUTTON.update()                                             # Shows only login button now
+        SUBMITBUTTON.changeColour(pygame.mouse.get_pos())
+        
+        manager.update(REFRESHRATE)
+        manager.draw_ui(screen)
+        pygame.display.update()  
+# SIGN UP
+
+# LOG IN
+def login():
+    pygame.display.set_caption("Login")
+    main = True
+    while main:
+        MENU_MOUSE_POS = pygame.mouse.get_pos() 
+        mainblit()                                    # Calls the function to blit onto screen
+        screen.blit(degree, (weatherxvalue,weatheryvalue))                # Blits the degree onto screen (Here and not in function as needs to update with every while loop as degree can change)
+        screen.blit(partlycloudy, (weatherxvalue + 50, weatheryvalue - 20))
+        
+        for event in pygame.event.get():              # Checks all possible events that can occur in pygame
+            if event.type == pygame.QUIT:
+                main = False                       # Ends while loop if user presses 'X' in top right
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if SIGNUPBUTTON.checkForInput(MENU_MOUSE_POS):
+                    signup()
+                    main = False
+                    
+
+        SIGNUPBUTTON.update()                                 # Shows only signup button
+        SIGNUPBUTTON.changeColour(pygame.mouse.get_pos())
+        
+        
+        pygame.display.update()  
+
+
+main()
+
+# PROFILING
+import cProfile
+import re
+if __name__ == "__main__":
+    import cProfile
+    cProfile.run('main()',"output.dat")
+    
+import pstats
+from pstats import SortKey
+with open("output_time.txt","w") as f:
+    p = pstats.Stats("output.dat",stream = f)
+    p.sort_stats("time").print_stats()
+        
+with open("output_calls.txt","w") as f:
+    p = pstats.Stats("output.dat",stream = f)
+    p.sort_stats("calls").print_stats()
+ #PROFILING
